@@ -17,7 +17,7 @@ export default function ThemeTree(props: { store: Store; onCreate: (parentId?: s
     <Paper class="panel tree-panel" elevation={0}>
       <div class="panel-heading">
         <div>
-          <Typography variant="overline">02 / 主题体系</Typography>
+          <Typography variant="overline">02 / 本项目主题 · 方案快照 r{props.store.state.snapshotSchemeRevision}</Typography>
           <Typography variant="h6">层级编码</Typography>
         </div>
         <Button size="small" variant="contained" onClick={() => props.onCreate()}>＋ 一级主题</Button>
