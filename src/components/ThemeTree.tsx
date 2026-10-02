@@ -4,7 +4,7 @@ import type { useCodingStore } from '../store/coding-store';
 
 type Store = ReturnType<typeof useCodingStore>;
 
-export default function ThemeTree(props: { store: Store; onCreate: (parentId?: string) => void; onMerge: () => void; onSplit: () => void }) {
+export default function ThemeTree(props: { store: Store; onCreate: (parentId?: string) => void; onMerge: () => void; onSplit: () => void; onPublish: () => void }) {
   const [query, setQuery] = createSignal('');
   const themes = createMemo(() => props.store.orderedThemes().filter((theme) => theme.name.toLowerCase().includes(query().toLowerCase())));
   const activeSegment = () => props.store.state.segments.find((segment) => segment.id === props.store.state.activeSegmentId);
@@ -15,15 +15,18 @@ export default function ThemeTree(props: { store: Store; onCreate: (parentId?: s
 
   return (
     <Paper class="panel tree-panel" elevation={0}>
-      <div class="panel-heading">
+      <div class="panel-heading tree-heading">
         <div>
           <Typography variant="overline">02 / 主题体系</Typography>
           <Typography variant="h6">层级编码</Typography>
         </div>
-        <Button size="small" variant="contained" onClick={() => props.onCreate()}>＋ 一级主题</Button>
+        <div class="tree-heading-actions">
+          <Button size="small" onClick={props.onPublish}>回写方案库</Button>
+          <Button size="small" variant="contained" onClick={() => props.onCreate()}>＋ 一级主题</Button>
+        </div>
       </div>
       <input class="native-input full" placeholder="筛选主题" value={query()} onInput={(event) => setQuery(event.currentTarget.value)} />
-      <div class="theme-help">勾选 A / B 可将当前片段分配给该主题；不同判断会以“分歧”提示。</div>
+      <div class="theme-help">本面板编辑的是<strong>本项目的方案快照（v{props.store.state.codebookVersion}）</strong>，只影响本项目；打磨成熟后通过“回写方案库”发布为共享库新版本。勾选 A / B 可将当前片段分配给该主题。</div>
       <div class="theme-tree">
         <For each={themes()}>{(theme) => {
           const depth = () => {

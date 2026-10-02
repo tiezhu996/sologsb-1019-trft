@@ -1,15 +1,25 @@
-import type { CodingState } from '../types';
+import type { AuditEntry, Codebook, Project, Theme } from '../types';
 
-export const seedState = (): CodingState => {
-  const themes = [
-    { id: 't-education', name: '1. 教育经历', parentId: null, color: '#267365', definition: '正式或非正式的学习经历、学校与教师记忆。', memo: '注意区分入学选择和家庭影响。', examples: ['小学时老师让我第一次接触地图'] },
-    { id: 't-school-choice', name: '1.1 学校选择', parentId: 't-education', color: '#4d9b8f', definition: '关于进入哪所学校、为何选择及其决策者的陈述。', memo: '家长和个人的理由要分别编码。', examples: [] },
-    { id: 't-teacher', name: '1.2 教师影响', parentId: 't-education', color: '#78b7ac', definition: '教师对学习兴趣、职业方向或自我认知的影响。', memo: '', examples: ['他总能把课文讲成故事'] },
-    { id: 't-work', name: '2. 工作与迁徙', parentId: null, color: '#b65d38', definition: '职业选择、工作变化以及由此产生的地域迁移。', memo: '', examples: [] },
-    { id: 't-migration', name: '2.1 迁徙决定', parentId: 't-work', color: '#d2845f', definition: '搬家、跨地区工作背后的家庭与经济决策。', memo: '', examples: [] },
-    { id: 't-family', name: '3. 家庭支持', parentId: null, color: '#3b6f95', definition: '家庭成员在教育、工作和生活转型中的支持。', memo: '', examples: [] }
-  ];
-  const lines = [
+const seedThemes = (): Theme[] => [
+  { id: 't-education', name: '1. 教育经历', parentId: null, color: '#267365', definition: '正式或非正式的学习经历、学校与教师记忆。', memo: '注意区分入学选择和家庭影响。', examples: ['小学时老师让我第一次接触地图'] },
+  { id: 't-school-choice', name: '1.1 学校选择', parentId: 't-education', color: '#4d9b8f', definition: '关于进入哪所学校、为何选择及其决策者的陈述。', memo: '家长和个人的理由要分别编码。', examples: [] },
+  { id: 't-teacher', name: '1.2 教师影响', parentId: 't-education', color: '#78b7ac', definition: '教师对学习兴趣、职业方向或自我认知的影响。', memo: '', examples: ['他总能把课文讲成故事'] },
+  { id: 't-work', name: '2. 工作与迁徙', parentId: null, color: '#b65d38', definition: '职业选择、工作变化以及由此产生的地域迁移。', memo: '', examples: [] },
+  { id: 't-migration', name: '2.1 迁徙决定', parentId: 't-work', color: '#d2845f', definition: '搬家、跨地区工作背后的家庭与经济决策。', memo: '', examples: [] },
+  { id: 't-family', name: '3. 家庭支持', parentId: null, color: '#3b6f95', definition: '家庭成员在教育、工作和生活转型中的支持。', memo: '', examples: [] }
+];
+
+export const seedCodebook = (): Codebook => ({
+  version: 1,
+  updatedAt: new Date().toISOString(),
+  name: '通用访谈研究方案',
+  themes: seedThemes()
+});
+
+/** 首次使用（没有任何旧数据）时的演示项目，快照复制自默认共享方案库。 */
+export const seedProject = (codebook: Codebook): Project => {
+  const now = new Date().toISOString();
+  const lines: Array<[string, string, string]> = [
     ['00:00:08', '访谈者', '李老师，您小时候是在县城还是乡下长大的？'],
     ['00:00:14', '李岚', '我是在临河镇长大的。小学四年级以前都在村里，后来家里觉得镇上的学校更好，就把我转过去了。'],
     ['00:00:31', '访谈者', '这个转学是谁提出来的？'],
@@ -24,14 +34,19 @@ export const seedState = (): CodingState => {
     ['00:02:23', '李岚', '不是替我做决定，而是在我犹豫的时候把可能性讲清楚。有时他们的建议并不对，但至少让我知道可以商量。']
   ];
   return {
+    id: 'p-demo',
+    name: '李岚访谈：教育与职业选择',
+    createdAt: now,
+    codebookVersion: codebook.version,
+    codebookCopiedAt: now,
     revision: 1,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
     activeTranscriptId: 'tr-001',
     activeSegmentId: 's-001',
     activeThemeId: 't-school-choice',
     coderA: '林研究员',
     coderB: '赵研究员',
-    transcripts: [{ id: 'tr-001', title: '李岚访谈：教育与职业选择', participant: '李岚', importedAt: new Date().toISOString(), sourceName: '示例转写' }],
+    transcripts: [{ id: 'tr-001', title: '李岚访谈：教育与职业选择', participant: '李岚', importedAt: now, sourceName: '示例转写' }],
     segments: lines.map((line, index) => ({
       id: `s-${String(index + 1).padStart(3, '0')}`,
       transcriptId: 'tr-001',
@@ -45,7 +60,52 @@ export const seedState = (): CodingState => {
       },
       note: ''
     })),
-    themes,
-    audit: [{ id: 'a-seed', at: new Date().toISOString(), action: '初始化', detail: '载入演示访谈与两个编码者的判断' }]
+    themes: structuredClone(codebook.themes),
+    audit: [{ id: 'a-seed', at: now, action: '初始化', detail: '载入演示访谈与两个编码者的判断' }]
+  };
+};
+
+/** 旧版 CodingState（v1，单库）的形状，仅迁移时使用。 */
+export interface LegacyCodingState {
+  revision: number;
+  updatedAt: string;
+  activeTranscriptId: string;
+  activeSegmentId: string;
+  activeThemeId: string;
+  coderA: string;
+  coderB: string;
+  transcripts: Project['transcripts'];
+  segments: Project['segments'];
+  themes: Theme[];
+  audit: AuditEntry[];
+}
+
+/**
+ * 首次打开 v2 时把旧版单库数据迁移为“默认项目”。
+ * 原转写、双编码者判断、人员姓名与审计记录全部保留，不复制出第二套主题。
+ */
+export const migrateLegacyProject = (legacy: LegacyCodingState): Project => {
+  const now = new Date().toISOString();
+  const firstTitle = legacy.transcripts[0]?.title ?? '默认研究项目';
+  return {
+    id: 'p-default',
+    name: firstTitle,
+    createdAt: now,
+    codebookVersion: 1,
+    codebookCopiedAt: now,
+    revision: legacy.revision,
+    updatedAt: legacy.updatedAt || now,
+    activeTranscriptId: legacy.activeTranscriptId,
+    activeSegmentId: legacy.activeSegmentId,
+    activeThemeId: legacy.activeThemeId,
+    coderA: legacy.coderA,
+    coderB: legacy.coderB,
+    transcripts: structuredClone(legacy.transcripts ?? []),
+    segments: structuredClone(legacy.segments ?? []),
+    themes: structuredClone(legacy.themes ?? []),
+    audit: [
+      { id: `a-migrate-${crypto.randomUUID()}`, at: now, action: '数据迁移', detail: '旧版数据迁移到默认研究项目，原判断、编码人员与审计记录已保留' },
+      ...structuredClone(legacy.audit ?? [])
+    ]
   };
 };
